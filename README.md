@@ -24,7 +24,7 @@ A Python tool to merge Web of Science (`.xlsx`) and Scopus (`.csv`) exports into
 
 1. **Clone** this repository:  
    ```bash
-   git clone https://github.com/yourusername/wos-scopus-merger.git
+   git clone https://github.com/NasserKhalili/wos-scopus-merger.git
    cd wos-scopus-merger
 
 2. **Install** dependencies:
