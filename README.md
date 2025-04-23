@@ -3,7 +3,7 @@
 **Description:**  
 A Python tool to merge Web of Science (`.xlsx`) and Scopus (`.csv`) exports into a single, deduplicated Web of Science–style Excel file. Ideal for creating a comprehensive bibliographic dataset before downstream bibliometric analysis.
 
----
+--- 
 
 ## 🔧 Script Overview
 
