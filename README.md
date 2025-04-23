@@ -9,8 +9,8 @@ A Python tool to merge Web of Science (`.xlsx`) and Scopus (`.csv`) exports into
 
 ### `merge_wos_scopus.py`
 - **Input:**  
-  - `WOS_New.xlsx` — Web of Science export  
-  - `scopus_New.csv` — Scopus export  
+  - `WOS.xlsx` — Web of Science export  
+  - `scopus.csv` — Scopus export  
 - **Process:**  
   1. Normalize column names and article titles (lowercase, strip punctuation)  
   2. Map Scopus fields onto the full WoS schema, filling missing columns with blanks  
