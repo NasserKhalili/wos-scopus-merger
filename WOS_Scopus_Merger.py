@@ -7,7 +7,7 @@ scopus_file  = "scopus_base.csv"
 output_file  = "merged_WoS_format.xlsx"
 # ────────────────────────────────────────────────────────────────────────────────
 
-# 1) Full Web of Science headers
+# 1) Full WoS headers
 wos_headers = [
     "Publication Type","Authors","Book Authors","Book Editors","Book Group Authors","Author Full Names",
     "Book Author Full Names","Group Authors","Article Title","Source Title","Book Series Title",
@@ -24,7 +24,7 @@ wos_headers = [
     "Hot Paper Status","Date of Export","UT (Unique WOS ID)","Web of Science Record"
 ]
 
-# 2) Scopus → WoS mapping
+# 2) Scopus → WoS mapping (including Year, References, Language)
 column_mapping = {
     "Authors":"Authors",
     "Author(s) ID":"Researcher Ids",
@@ -54,26 +54,25 @@ column_mapping = {
     "Funding Text":"Funding Text",
     "References":"Cited References",
     "Cited by":"Times Cited, WoS Core",
-    "Year":"Publication Year"
+    "Year":"Publication Year",
+    "Language of Original Document":"Language"
 }
 
-# 3) Title normalization helper
+# 3) Helpers
 def normalize_title(t):
     if pd.isna(t):
         return ""
     s = re.sub(r'[^A-Za-z0-9 ]', ' ', str(t).lower())
     return re.sub(r'\s+', ' ', s).strip()
 
-# 4) Country canonical map
 country_map = {
-    r"peoples\s*r\s*china":     "China",
-    r"\bprc\b":                 "China",
-    r"\bchina\b":               "China",
-    r"u\.?s\.?a\.?":            "United States",
-    r"united\s+states":         "United States",
-    r"\buae\b":                 "United Arab Emirates",
-    r"united\s+arab\s+emirates":"United Arab Emirates"
-    # extend as needed
+    r"peoples\s*r\s*china":          "China",
+    r"\bprc\b":                      "China",
+    r"\bchina\b":                    "China",
+    r"u\.?s\.?a\.?":                 "United States",
+    r"united\s+states":              "United States",
+    r"\buae\b":                      "United Arab Emirates",
+    r"united\s+arab\s+emirates":     "United Arab Emirates"
 }
 
 def canonical_country(tok):
@@ -88,11 +87,9 @@ def normalize_addresses(addr):
         return ""
     authors = []
     for chunk in addr.split(";"):
-        piece = chunk.strip()
-        if not piece:
-            continue
-        parts = [p.strip() for p in piece.rsplit(",", 5)]
-        # last element is raw country
+        p = chunk.strip()
+        if not p: continue
+        parts = [x.strip() for x in p.rsplit(",", 5)]
         raw = parts[-1]
         parts[-1] = canonical_country(raw)
         authors.append(", ".join(parts))
@@ -101,43 +98,43 @@ def normalize_addresses(addr):
 # ────────────────────────────────────────────────────────────────────────────────
 
 try:
-    # Load data
-    print("🔄 Loading WOS and Scopus files...")
+    print("🔄 Loading WOS and Scopus...")
     df_wos    = pd.read_excel(wos_file, dtype=str)
     df_scopus = pd.read_csv(scopus_file, dtype=str, encoding="utf-8", low_memory=False)
     print(f"WoS samples: {len(df_wos)}")
     print(f"Scopus samples: {len(df_scopus)}")
 
-    # Clean column names
+    # Clean headers
     df_wos.columns    = df_wos.columns.str.strip()
     df_scopus.columns = df_scopus.columns.str.strip()
 
-    # Rename Scopus columns
+    # Rename scopus → WoS
     df_scopus.rename(columns=column_mapping, inplace=True)
 
-    # Ensure all WoS headers exist
+    # Ensure all headers
     for col in wos_headers:
-        if col not in df_wos:
-            df_wos[col] = ""
-        if col not in df_scopus:
-            df_scopus[col] = ""
+        if col not in df_wos:    df_wos[col]    = ""
+        if col not in df_scopus: df_scopus[col] = ""
 
-    # Reorder and drop duplicate columns
+    # Reorder & drop dup cols
     df_wos    = df_wos.loc[:, ~df_wos.columns.duplicated()][wos_headers]
     df_scopus = df_scopus.loc[:, ~df_scopus.columns.duplicated()][wos_headers]
 
-    # Fill missing cited references in Scopus
+    # Fill cited references
     df_scopus["Cited References"] = df_scopus["Cited References"].fillna("")
 
-    # Use affiliations as addresses only if WOS Addresses empty
+    # Default Scopus language to English if still blank
+    df_scopus["Language"] = df_scopus["Language"].fillna("").replace("", "English")
+
+    # Copy Affiliations → Addresses if empty
     mask = df_scopus["Addresses"].isna() | (df_scopus["Addresses"] == "")
     df_scopus.loc[mask, "Addresses"] = df_scopus.loc[mask, "Affiliations"]
 
-    # Add source column
+    # Label
     df_wos["Source"]    = "WoS"
     df_scopus["Source"] = "Scopus"
 
-    # Pre-merge dedupe stats
+    # Pre-merge stats
     wos_titles    = set(df_wos["Article Title"].apply(normalize_title))
     scopus_titles = set(df_scopus["Article Title"].apply(normalize_title))
     print(f"Unique titles in WOS: {len(wos_titles)}")
@@ -146,7 +143,7 @@ try:
     print(f"Overlapping titles: {len(overlap)}")
     print(f"Titles unique to Scopus: {len(scopus_titles - wos_titles)}")
 
-    # Merge dataframes (WOS first) and dedupe
+    # Merge & dedupe
     df_all    = pd.concat([df_wos, df_scopus], ignore_index=True)
     df_all["_norm"] = df_all["Article Title"].apply(normalize_title)
     df_merged = df_all.drop_duplicates(subset="_norm", keep="first").drop(columns="_norm")
@@ -159,14 +156,13 @@ try:
     print(f"WoS samples in final: {wos_n}")
     print(f"Scopus samples in final: {scopus_n}")
 
-    # Normalize country names in Addresses
+    # Normalize country tokens
     df_merged["Addresses"] = df_merged["Addresses"].apply(normalize_addresses)
 
-    # Save merged Excel
+    # Save
     df_merged.to_excel(output_file, index=False)
     print(f"✅ Merge completed! File saved to '{output_file}'")
-
 except FileNotFoundError as e:
-    print(f"Error: File not found - {e.filename}")
+    print(f"Error: File not found - {e}")
 except Exception as e:
     print(f"Error occurred: {e}")
