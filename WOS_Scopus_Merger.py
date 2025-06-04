@@ -4,8 +4,7 @@ import re
 # ── CONFIG ─────────────────────────────────────────────────────────────────────
 wos_file     = "WOS.xlsx"
 scopus_file  = "scopus.csv"
-output_file_cocitation = "merged_WOS_format_final.xlsx"
-output_file_citation = "merged_WOS_format_citation.xlsx"
+output_file_cocitation = "merged_WOS_format.xlsx"
 # ────────────────────────────────────────────────────────────────────────────────
 
 # 1) Full WoS headers
