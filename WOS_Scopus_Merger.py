@@ -412,4 +412,4 @@ df_final_citation = df_all.drop_duplicates(subset=["_norm", "Authors", "Publicat
 wos_final = df_final_cocitation.Source.str.contains("WoS").sum()
 scopus_final = df_final_cocitation.Source.str.contains("Scopus").sum()
 
-print(f"Total Records Written: {len(df_final_cocitation)}  (WOS: {wos_final}, Scopus: {scopus_final})")
+print(f"Total Records Written: {len(df_final_cocitation)}  (WOS: {wos_final}, Scopus: {scopus_final - overlap})")
