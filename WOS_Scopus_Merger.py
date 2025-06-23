@@ -2,8 +2,8 @@ import pandas as pd
 import re
 
 # ── CONFIG ─────────────────────────────────────────────────────────────────────
-wos_file     = "WOS.xlsx"
-scopus_file  = "scopus.csv"
+wos_file     = "WOS-Filtered.xlsx"
+scopus_file  = "scopus-Filtered.csv"
 output_file_cocitation = "merged_WOS_format.xlsx"
 # ────────────────────────────────────────────────────────────────────────────────
 
@@ -395,11 +395,12 @@ def combine_cr_citation(group):
 if overlap > 0:
     grouped = df_all.groupby("_norm")
     df_all = grouped.apply(lambda x: pd.Series({
+        "_norm": x.name, 
         **x.iloc[0].to_dict(),
         "Cited References (Co-Citation)": combine_cr_cocitation(x),
         "Cited References (Citation)": combine_cr_citation(x),
         "Source": " ".join(set(x["Source"]))
-    })).reset_index(drop=True)
+    }), include_groups=False).reset_index(drop=True)
 
 # Log dropped records
 dropped = df_all[df_all.duplicated(subset=["_norm", "Authors", "Publication Year"], keep=False)]
