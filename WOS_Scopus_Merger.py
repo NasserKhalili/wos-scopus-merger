@@ -353,8 +353,8 @@ print(f"WOS Records = {wos_records}")
 print(f"Scopus Records = {scopus_records}")
 print(f"Total Records (pre-merge) = {total_pre}\n")
 
-print(f"WOS Duplicates = {len(wos_dupes)}")
-print(f"Scopus Duplicates = {len(scopus_dupes)}\n")
+print(f"WOS Duplicates = {len(wos_dupes)/2}")
+print(f"Scopus Duplicates = {len(scopus_dupes)/2}\n")
 
 # 7) Clean fields
 for D in (df_wos, df_scopus):
