@@ -353,8 +353,8 @@ print(f"WOS Records = {wos_records}")
 print(f"Scopus Records = {scopus_records}")
 print(f"Total Records (pre-merge) = {total_pre}\n")
 
-print(f"WOS Duplicates = {len(wos_dupes)/2}")
-print(f"Scopus Duplicates = {len(scopus_dupes)/2}\n")
+print(f"WOS Duplicates = {len(wos_dupes)}")
+print(f"Scopus Duplicates = {len(scopus_dupes)}\n")
 
 # 7) Clean fields
 for D in (df_wos, df_scopus):
@@ -414,3 +414,6 @@ wos_final = df_final_cocitation.Source.str.contains("WoS").sum()
 scopus_final = df_final_cocitation.Source.str.contains("Scopus").sum()
 
 print(f"Total Records Written: {len(df_final_cocitation)}  (WOS: {wos_final}, Scopus: {scopus_final - overlap})")
+
+# 10) Save final merged output
+df_final_cocitation.to_excel(output_file_cocitation, index=False)
